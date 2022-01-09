@@ -42,7 +42,7 @@ class InvalidDate(ValueError):
 
 def create_bucket(identifier: str, buckets: List[AccountingBucket]) -> AccountingBucket: # uow: unit_of_work.AbstractUnitOfWork
     if not is_valid_new_identifier(identifier, buckets):
-        raise InvalidIdentifier('Please provide a valid bucket identifier')
+        raise InvalidIdentifier('Duplicate bucket identifier found, please provide a unique value')
     
     return AccountingBucket.create(identifier)
 

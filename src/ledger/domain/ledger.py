@@ -17,6 +17,9 @@ class Ledger:
 
     def add_new_entries(self, new_entries: List[LedgerEntry]):
         self.entries.extend(new_entries)
-    
+
+    def get_all_entries(self) -> List[LedgerEntry]:
+        return self.entries
+
     def get_entries(self, loan_id: int) -> List[LedgerEntry]:
         return [entry for entry in self.entries if entry.loan_id == loan_id]
