@@ -2,7 +2,7 @@ from datetime import date
 import pytest
 
 from ledger.domain.bucket import (AccountingBucket, LedgerEntry)
-from ledger.service_layer.services import (InvalidIdentifier, create_bucket, create_ledger_entry, is_bucket_present, is_valid_new_identifier)
+from ledger.service_layer.services import (InvalidIdentifier, create_bucket, create_ledger_entry, is_bucket_present, is_valid_new_identifier, is_valid_pair_value)
 
 class TestIsValidIdentifier:
     def test_identifier_invalid_if_smaller_than_min_length(self):
@@ -47,13 +47,13 @@ class TestIsBucketPresent:
 class TestCreateLedgerEntry:
     def test_if_no_buckets_then_error_raised(self):
         with pytest.raises(InvalidIdentifier):
-            _ = create_ledger_entry(1, 'test-bucket-name', 100.0, None, [])
+            _ = create_ledger_entry(1, 'test-bucket-name', 100.0, date.today(), [])
 
     def test_if_invalid_bucket_then_error_raised(self):
         test_bucket = AccountingBucket.create('test-bucket-name')
 
         with pytest.raises(InvalidIdentifier):
-            _ = create_ledger_entry(1, 'other-test-bucket-name', 100.0, None, [test_bucket])
+            _ = create_ledger_entry(1, 'other-test-bucket-name', 100.0, date.today(), [test_bucket])
 
     def test_if_valid_bucket_then_ledger_entry_is_created(self):
         test_bucket = AccountingBucket.create('test-bucket-name')
@@ -62,3 +62,16 @@ class TestCreateLedgerEntry:
 
         assert isinstance(ledger_entry, LedgerEntry)
         assert ledger_entry.effective_date == date.today()
+
+class TestIsValidPairValue:
+    def test_if_unequal_values_then_invalid(self):
+        assert is_valid_pair_value(0.2, 0.1) is False
+
+    def test_if_zero_values_then_valid(self):
+        assert is_valid_pair_value(0.0, 0.0)
+
+    def test_if_equal_and_opposite_values_flipped_then_valid(self):
+        assert is_valid_pair_value(-0.1, 0.1) is False
+
+    def test_if_equal_and_opposite_values_then_valid(self):
+        assert is_valid_pair_value(0.1, -0.1)
