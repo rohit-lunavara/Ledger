@@ -16,6 +16,18 @@ class AccountingBucket:
         self.debit = 0.0
         self.credit = 0.0
 
+    def is_debit_value(self, value: float):
+        return value >= 0.0
+
+    def is_credit_value(self, value: float):
+        return value <= 0.0
+
+    def add_value(self, value: float):
+        if self.is_debit_value(value):
+            self.debit += value
+        elif self.is_credit_value(value):
+            self.credit += value
+
     @classmethod
     def create(cls, identifier):
         """
