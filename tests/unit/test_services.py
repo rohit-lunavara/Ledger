@@ -1,8 +1,9 @@
 from datetime import date
 import pytest
 
-from ledger.domain.bucket import (AccountingBucket, LedgerEntry)
-from ledger.service_layer.services import (InvalidDate, InvalidIdentifier, InvalidPairValue, create_bucket, create_double_entries, create_ledger_entry, get_buckets_sum, is_bucket_present, is_valid_new_identifier, is_valid_pair_value)
+from ledger.domain.bucket import (AccountingBucket)
+from ledger.domain.ledger import (Ledger, LedgerEntry)
+from ledger.service_layer.services import (InvalidDate, InvalidIdentifier, InvalidPairValue, create_bucket, create_double_entries, create_ledger_entry, get_buckets_sum, get_ledger_entries, is_bucket_present, is_valid_new_identifier, is_valid_pair_value)
 
 class TestIsValidIdentifier:
     def test_identifier_invalid_if_smaller_than_min_length(self):
@@ -202,3 +203,14 @@ class TestBucketsSum:
         buckets_sum = get_buckets_sum(['test-debit-bucket', 'test-credit-bucket'], [test_debit_bucket, test_credit_bucket])
         assert buckets_sum['test-debit-bucket'] == 300.0
         assert buckets_sum['test-credit-bucket'] == -300.0
+
+class TestGetLedgerEntries:
+    def test_if_all_entries_returned(self):
+        test_debit_bucket = AccountingBucket.create('test-debit-bucket')
+        first_debit_entry = create_ledger_entry(1, 'test-debit-bucket', 100.0, date.today(), [test_debit_bucket])
+        second_debit_entry = create_ledger_entry(1, 'test-debit-bucket', 100.0, date.today(), [test_debit_bucket])
+        ledger = Ledger()
+        ledger.add_new_entries([first_debit_entry, second_debit_entry])
+
+        ledger_entries = get_ledger_entries(1, ledger)
+        assert len(ledger_entries) == 2

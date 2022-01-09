@@ -1,15 +1,3 @@
-from dataclasses import dataclass
-from datetime import date
-
-@dataclass(frozen=True)
-class LedgerEntry:
-    loan_id: int
-    created_at: date
-    effective_date: date
-    bucket_identifier: str
-    value: float
-
-
 class AccountingBucket:
     def __init__(self, identifier: str):
         self.identifier = identifier

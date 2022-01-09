@@ -2,7 +2,8 @@ from datetime import date
 from typing import (Dict, List, Optional)
 
 from ledger import config
-from ledger.domain.bucket import (AccountingBucket, LedgerEntry)
+from ledger.domain.ledger import (Ledger, LedgerEntry)
+from ledger.domain.bucket import (AccountingBucket)
 
 MINIMUM_IDENTIFIER_LENGTH = config.get_minimum_identifier_size()
 MAXIMUM_IDENTIFIER_LENGTH = config.get_maximum_identifier_size()
@@ -82,6 +83,10 @@ def create_double_entries(loan_id: int, pair_entries: List[Dict], buckets: List[
         ledger_entries.append(credit_ledger_entry)
 
     return ledger_entries
+
+def get_ledger_entries(loan_id: int, ledger: Ledger) -> List[LedgerEntry]:
+    return ledger.get_entries(loan_id)
+
 
 def get_buckets_sum(identifiers: List[str], buckets: List[AccountingBucket]) -> Dict[str, float]:
     buckets_sum = {}
