@@ -1,7 +1,8 @@
+from decimal import InvalidContext
 from ledger.domain.bucket import AccountingBucket
 import pytest
 
-from ledger.service_layer.services import (create_bucket, is_valid_identifier)
+from ledger.service_layer.services import (InvalidIdentifier, create_bucket, is_valid_identifier)
 
 class TestIsValidIdentifier:
     def test_identifier_invalid_if_smaller_than_min_length(self):
@@ -20,4 +21,16 @@ class TestIsValidIdentifier:
         assert is_valid_identifier('new-test-bucket-name', [test_bucket, other_test_bucket])
 
 class TestCreateBucket:
-    pass
+    def test_if_invalid_identifier_then_error_raised(self):
+        test_bucket = AccountingBucket.create('test-bucket-name')
+
+        with pytest.raises(InvalidIdentifier):
+            _ = create_bucket('test-bucket-name', [test_bucket])
+
+    def test_if_valid_identifier_then_bucket_created(self):
+        test_bucket = AccountingBucket.create('test-bucket-name')
+
+        new_bucket = create_bucket('other-test-bucket-name', [test_bucket])
+
+        assert isinstance(new_bucket, AccountingBucket)
+        assert new_bucket.identifier == 'other-test-bucket-name'
