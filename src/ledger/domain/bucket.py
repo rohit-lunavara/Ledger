@@ -22,6 +22,10 @@ class AccountingBucket:
     def is_credit_value(self, value: float):
         return value <= 0.0
 
+    @property
+    def sum(self):
+        return self.debit + self.credit
+
     def add_value(self, value: float):
         if self.is_debit_value(value):
             self.debit += value

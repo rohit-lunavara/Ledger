@@ -82,3 +82,14 @@ def create_double_entries(loan_id: int, pair_entries: List[Dict], buckets: List[
         ledger_entries.append(credit_ledger_entry)
 
     return ledger_entries
+
+def get_buckets_sum(identifiers: List[str], buckets: List[AccountingBucket]) -> Dict[str, float]:
+    buckets_sum = {}
+    for identifier in identifiers:
+        if not is_bucket_present(identifier, buckets):
+            raise InvalidIdentifier('Please provide a valid bucket identifier')
+
+        current_bucket = get_bucket_by_identifier(identifier, buckets)
+        buckets_sum[current_bucket.identifier] = current_bucket.sum
+
+    return buckets_sum
