@@ -2,7 +2,7 @@ from datetime import date
 import pytest
 
 from ledger.domain.bucket import (AccountingBucket, LedgerEntry)
-from ledger.service_layer.services import (InvalidIdentifier, create_bucket, create_ledger_entry, is_bucket_present, is_valid_new_identifier, is_valid_pair_value)
+from ledger.service_layer.services import (InvalidIdentifier, InvalidPairValue, create_bucket, create_double_entries, create_ledger_entry, is_bucket_present, is_valid_new_identifier, is_valid_pair_value)
 
 class TestIsValidIdentifier:
     def test_identifier_invalid_if_smaller_than_min_length(self):
@@ -58,7 +58,7 @@ class TestCreateLedgerEntry:
     def test_if_valid_bucket_then_ledger_entry_is_created(self):
         test_bucket = AccountingBucket.create('test-bucket-name')
 
-        ledger_entry = create_ledger_entry(1, 'test-bucket-name', 100.0, None, [test_bucket])
+        ledger_entry = create_ledger_entry(1, 'test-bucket-name', 100.0, date.today(), [test_bucket])
 
         assert isinstance(ledger_entry, LedgerEntry)
         assert ledger_entry.effective_date == date.today()
@@ -75,3 +75,84 @@ class TestIsValidPairValue:
 
     def test_if_equal_and_opposite_values_then_valid(self):
         assert is_valid_pair_value(0.1, -0.1)
+
+class TestCreateDoubleEntries:
+    def test_if_no_pair_entries_then_no_double_entries_created(self):
+        ledger_entries = create_double_entries(1, [], [])
+        assert not ledger_entries
+
+    def test_if_pair_entries_with_invalid_values_then_error_raised(self):
+        test_debit_bucket = AccountingBucket.create('test-debit-bucket')
+        test_credit_bucket = AccountingBucket.create('test-credit-bucket')
+        pair_entries = [
+            {
+                "effective_date": "2021-01-21",
+                "debit": {
+                    "identifier": "test-debit-bucket",
+                    "value": 123.0
+                },
+                "credit": {
+                    "identifier": "test-credit-bucket",
+                    "value": 123.0
+                }
+            }
+        ]
+        with pytest.raises(InvalidPairValue):
+            _ = create_double_entries(1, pair_entries, [test_debit_bucket, test_credit_bucket])
+
+
+    def test_if_pair_entries_with_invalid_bucket_then_error_raised(self):
+        test_debit_bucket = AccountingBucket.create('test-debit-bucket')
+        test_credit_bucket = AccountingBucket.create('test-credit-bucket')
+        pair_entries = [
+            {
+                "effective_date": "2021-01-21",
+                "debit": {
+                    "identifier": "test-debit-bucket",
+                    "value": 123.0
+                },
+                "credit": {
+                    "identifier": "test-credit-bucket",
+                    "value": -123.0
+                }
+            }
+        ]
+        with pytest.raises(InvalidIdentifier):
+            _ = create_double_entries(1, pair_entries, [test_debit_bucket])
+
+    
+    def test_if_pair_entries_valid_then_double_entries_created(self):
+        test_debit_bucket = AccountingBucket.create('test-debit-bucket')
+        test_credit_bucket = AccountingBucket.create('test-credit-bucket')
+        other_test_credit_bucket = AccountingBucket.create('other-test-credit-bucket')
+        pair_entries = [
+            {
+                "effective_date": "2022-01-21",
+                "debit": {
+                    "identifier": "test-debit-bucket",
+                    "value": 123.0
+                },
+                "credit": {
+                    "identifier": "test-credit-bucket",
+                    "value": -123.0
+                }
+            },
+            {
+                "debit": {
+                    "identifier": "test-debit-bucket",
+                    "value": 100.0
+                },
+                "credit": {
+                    "identifier": "other-test-credit-bucket",
+                    "value": -100.0
+                }
+            }
+        ]
+        ledger_entries = create_double_entries(1, pair_entries, [test_debit_bucket, test_credit_bucket, other_test_credit_bucket])
+        assert len(ledger_entries) == 4
+
+        future_date = date.fromisoformat("2022-01-21")
+        assert ledger_entries[0].value == 123.0 and ledger_entries[0].bucket_identifier == "test-debit-bucket" and ledger_entries[0].effective_date == future_date
+        assert ledger_entries[1].value == -123.0 and ledger_entries[1].bucket_identifier == "test-credit-bucket" and ledger_entries[1].effective_date == future_date
+        assert ledger_entries[2].value == 100.0 and ledger_entries[2].bucket_identifier == "test-debit-bucket" and ledger_entries[2].effective_date == date.today()
+        assert ledger_entries[3].value == -100.0 and ledger_entries[3].bucket_identifier == "other-test-credit-bucket" and ledger_entries[3].effective_date == date.today()
