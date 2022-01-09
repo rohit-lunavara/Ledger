@@ -2,7 +2,7 @@ from datetime import date
 import pytest
 
 from ledger.domain.bucket import (AccountingBucket, LedgerEntry)
-from ledger.service_layer.services import (InvalidIdentifier, InvalidPairValue, create_bucket, create_double_entries, create_ledger_entry, is_bucket_present, is_valid_new_identifier, is_valid_pair_value)
+from ledger.service_layer.services import (InvalidDate, InvalidIdentifier, InvalidPairValue, create_bucket, create_double_entries, create_ledger_entry, is_bucket_present, is_valid_new_identifier, is_valid_pair_value)
 
 class TestIsValidIdentifier:
     def test_identifier_invalid_if_smaller_than_min_length(self):
@@ -118,6 +118,26 @@ class TestCreateDoubleEntries:
             }
         ]
         with pytest.raises(InvalidIdentifier):
+            _ = create_double_entries(1, pair_entries, [test_debit_bucket])
+
+    
+    def test_if_pair_entries_with_invalid_effective_date_then_error_raised(self):
+        test_debit_bucket = AccountingBucket.create('test-debit-bucket')
+        test_credit_bucket = AccountingBucket.create('test-credit-bucket')
+        pair_entries = [
+            {
+                "effective_date": "test-not-date",
+                "debit": {
+                    "identifier": "test-debit-bucket",
+                    "value": 123.0
+                },
+                "credit": {
+                    "identifier": "test-credit-bucket",
+                    "value": -123.0
+                }
+            }
+        ]
+        with pytest.raises(InvalidDate):
             _ = create_double_entries(1, pair_entries, [test_debit_bucket])
 
     

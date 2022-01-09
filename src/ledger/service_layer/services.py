@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 from typing import (Dict, List, Optional)
 
 from ledger import config
@@ -35,6 +35,10 @@ class InvalidPairValue(ValueError):
     """Pair value cannot be accepted"""
     pass
 
+class InvalidDate(ValueError):
+    """String date value cannot be accepted"""
+    pass
+
 def create_bucket(identifier: str, buckets: List[AccountingBucket]) -> AccountingBucket: # uow: unit_of_work.AbstractUnitOfWork
     if not is_valid_new_identifier(identifier, buckets):
         raise InvalidIdentifier('Please provide a valid bucket identifier')
@@ -60,7 +64,10 @@ def create_double_entries(loan_id: int, pair_entries: List[Dict], buckets: List[
         if not pair_entry.get('effective_date'):
             effective_date = date.today()
         else:
-            effective_date = date.fromisoformat(pair_entry['effective_date'])
+            try:
+                effective_date = date.fromisoformat(pair_entry['effective_date'])
+            except ValueError as e:
+                raise InvalidDate('Effective date value must be a string with YYYY-MM-DD format')
 
         if not is_valid_pair_value(debit_entry['value'], credit_entry['value']):
             raise InvalidPairValue('Debit value must be positive, credit value must be negative and the absolute value must be equal to each other')
