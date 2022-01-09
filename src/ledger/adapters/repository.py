@@ -6,6 +6,9 @@ class LedgerRepository:
     def __init__(self):
         self.ledger = ledger.Ledger()
 
+    def add(self, entries: List[ledger.LedgerEntry]):
+        self.ledger.add_new_entries(entries)
+
     def get(self) -> ledger.Ledger:
         return self.ledger
 

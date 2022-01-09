@@ -181,26 +181,30 @@ class TestCreateDoubleEntries:
 class TestBucketsSum:
     def test_if_identifier_not_found_then_error_raised(self):
         test_debit_bucket = AccountingBucket.create('test-debit-bucket')
+        ledger = Ledger()
         with pytest.raises(InvalidIdentifier):
-            _ = get_buckets_sum(['test-credit-bucket'], [test_debit_bucket])
+            _ = get_buckets_sum(['test-credit-bucket'], [test_debit_bucket], ledger)
 
     def test_if_identifier_found_then_sum_returned(self):
         test_debit_bucket = AccountingBucket.create('test-debit-bucket')
-        test_debit_bucket.add_value(100.0)
-        test_debit_bucket.add_value(200.0)
+        ledger = Ledger()
+        ledger.add_new_entries([
+            LedgerEntry(1, date.today(), date.today(), 'test-debit-bucket', 300.0)
+        ])
 
-        buckets_sum = get_buckets_sum(['test-debit-bucket'], [test_debit_bucket])
+        buckets_sum = get_buckets_sum(['test-debit-bucket'], [test_debit_bucket], ledger)
         assert buckets_sum['test-debit-bucket'] == 300.0
 
     def test_if_multiple_identifiers_found_then_all_sums_returned(self):
         test_debit_bucket = AccountingBucket.create('test-debit-bucket')
-        test_debit_bucket.add_value(100.0)
-        test_debit_bucket.add_value(200.0)
         test_credit_bucket = AccountingBucket.create('test-credit-bucket')
-        test_credit_bucket.add_value(-100.0)
-        test_credit_bucket.add_value(-200.0)
+        ledger = Ledger()
+        ledger.add_new_entries([
+            LedgerEntry(1, date.today(), date.today(), 'test-debit-bucket', 300.0), 
+            LedgerEntry(1, date.today(), date.today(), 'test-credit-bucket', -300.0), 
+        ])
 
-        buckets_sum = get_buckets_sum(['test-debit-bucket', 'test-credit-bucket'], [test_debit_bucket, test_credit_bucket])
+        buckets_sum = get_buckets_sum(['test-debit-bucket', 'test-credit-bucket'], [test_debit_bucket, test_credit_bucket], ledger)
         assert buckets_sum['test-debit-bucket'] == 300.0
         assert buckets_sum['test-credit-bucket'] == -300.0
 

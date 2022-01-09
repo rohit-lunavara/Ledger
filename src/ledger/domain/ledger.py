@@ -23,3 +23,6 @@ class Ledger:
 
     def get_entries(self, loan_id: int) -> List[LedgerEntry]:
         return [entry for entry in self.entries if entry.loan_id == loan_id]
+
+    def get_entries_by_bucket_identifier(self, identifier: str) -> List[LedgerEntry]:
+        return [entry for entry in self.entries if entry.bucket_identifier == identifier]
