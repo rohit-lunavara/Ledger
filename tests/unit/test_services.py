@@ -1,8 +1,8 @@
-from decimal import InvalidContext
-from ledger.domain.bucket import AccountingBucket
+from datetime import date
 import pytest
 
-from ledger.service_layer.services import (InvalidIdentifier, create_bucket, is_valid_new_identifier)
+from ledger.domain.bucket import (AccountingBucket, LedgerEntry)
+from ledger.service_layer.services import (InvalidIdentifier, create_bucket, create_ledger_entry, is_bucket_present, is_valid_new_identifier)
 
 class TestIsValidIdentifier:
     def test_identifier_invalid_if_smaller_than_min_length(self):
@@ -34,3 +34,31 @@ class TestCreateBucket:
 
         assert isinstance(new_bucket, AccountingBucket)
         assert new_bucket.identifier == 'other-test-bucket-name'
+
+class TestIsBucketPresent:
+    def test_if_no_bucket_with_identifier_present_then_bucket_not_present(self):
+        test_bucket = AccountingBucket.create('test-bucket-name')
+        assert is_bucket_present('other-test-bucket-name', [test_bucket]) is False
+
+    def test_if_bucket_with_identifier_present_then_bucket_present(self):
+        test_bucket = AccountingBucket.create('test-bucket-name')
+        assert is_bucket_present('test-bucket-name', [test_bucket])
+
+class TestCreateLedgerEntry:
+    def test_if_no_buckets_then_error_raised(self):
+        with pytest.raises(InvalidIdentifier):
+            _ = create_ledger_entry(1, 'test-bucket-name', 100.0, None, [])
+
+    def test_if_invalid_bucket_then_error_raised(self):
+        test_bucket = AccountingBucket.create('test-bucket-name')
+
+        with pytest.raises(InvalidIdentifier):
+            _ = create_ledger_entry(1, 'other-test-bucket-name', 100.0, None, [test_bucket])
+
+    def test_if_valid_bucket_then_ledger_entry_is_created(self):
+        test_bucket = AccountingBucket.create('test-bucket-name')
+
+        ledger_entry = create_ledger_entry(1, 'test-bucket-name', 100.0, None, [test_bucket])
+
+        assert isinstance(ledger_entry, LedgerEntry)
+        assert ledger_entry.effective_date == date.today()
