@@ -25,7 +25,42 @@ class TestGetLedgerEntries:
         assert response.get_json()['entries'] == []
         assert response.status_code == 200
 
-    # TODO: Add test with ledger entries
+    def test_loan_id_with_entries_found_returns_ledger_entries(self, client):
+        bucket_created_response = client.post('/ledger/buckets?identifier=test-entries-found-bucket')
+        assert 'created successfully' in bucket_created_response.get_json()['message']
+        assert bucket_created_response.status_code == 200
+
+        entries = [
+            {
+                "effective_date": "2021-01-21",
+                "debit": {
+                    "identifier": "test-entries-found-bucket",
+                    "value": 123.0
+                },
+                "credit": {
+                    "identifier": "test-entries-found-bucket",
+                    "value": -123.0
+                }
+            }
+        ]
+        response = client.post('/ledger/entries?loan_id=1', data=json.dumps(entries), content_type='application/json')
+        assert '"2" ledger entries' in response.get_json()['message']
+        assert response.status_code == 200
+
+        response = client.get('/ledger/entries?loan_id=1')
+        response_entries = response.get_json()['entries']
+        assert response.status_code == 200
+        assert len(response_entries) == 2
+        
+        debit_entry = response_entries[0]
+        assert debit_entry['value'] == entries[0]['debit']['value']
+        assert debit_entry['bucket_identifier'] == entries[0]['debit']['identifier']
+        assert debit_entry['loan_id'] == 1
+
+        credit_entry = response_entries[1]
+        assert credit_entry['value'] == entries[0]['credit']['value']
+        assert credit_entry['bucket_identifier'] == entries[0]['credit']['identifier']
+        assert credit_entry['loan_id'] == 1
 
 class TestCreateBucket:
     def test_missing_bucket_id_param_returns_400(self, client):
