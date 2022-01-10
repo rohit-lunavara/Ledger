@@ -178,7 +178,7 @@ class TestGetBucketsSum:
         assert response.status_code == 400
 
     def test_missing_bucket_ids_returns_400(self, client):
-        response = client.get('/ledger/buckets/sum?loan_id=1&bucket_ids=')
+        response = client.get('/ledger/buckets/sum?loan_id=1&bucket_id=')
         assert 'bucket identifier' in response.get_json()['error']
         assert response.status_code == 400
 
@@ -206,7 +206,6 @@ class TestGetBucketsSum:
         assert entries_response.status_code == 200
 
         response = client.get('/ledger/buckets/sum?loan_id=1&bucket_id=test-new-debit-bucket&bucket_id=test-new-credit-bucket')
-        print(response.get_json())
         assert response.status_code == 200
         buckets_sum = response.get_json()['entries']
         assert buckets_sum['test-new-debit-bucket'] == 123.0

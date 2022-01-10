@@ -91,7 +91,6 @@ def get_ledger_entries(loan_id: int, ledger: Ledger) -> List[LedgerEntry]:
 def get_buckets_sum(loan_id: int, identifiers: List[str], buckets: List[AccountingBucket], ledger: Ledger) -> Dict[str, float]:
     buckets_sum = {}
     for identifier in identifiers:
-        print(identifier)
         if not is_bucket_present(identifier, buckets):
             raise InvalidIdentifier('Please provide a valid bucket identifier')
 
