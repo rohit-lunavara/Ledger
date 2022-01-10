@@ -165,3 +165,50 @@ class TestCreateDoubleEntries:
         response = client.post('/ledger/entries?loan_id=1', data=json.dumps(entries), content_type='application/json')
         assert '"2" ledger entries' in response.get_json()['message']
         assert response.status_code == 200
+
+class TestGetBucketsSum:
+    def test_missing_loan_id_returns_400(self, client):
+        response = client.get('/ledger/buckets/sum?loan_id=')
+        assert 'loan id' in response.get_json()['error']
+        assert response.status_code == 400
+
+    def test_non_integer_loan_id_returns_400(self, client):
+        response = client.get('/ledger/buckets/sum?loan_id=test-loan-id')
+        assert 'loan id' in response.get_json()['error']
+        assert response.status_code == 400
+
+    def test_missing_bucket_ids_returns_400(self, client):
+        response = client.get('/ledger/buckets/sum?loan_id=1&bucket_ids=')
+        assert 'bucket identifier' in response.get_json()['error']
+        assert response.status_code == 400
+
+    def test_loan_id_with_entries_found_returns_buckets_sum(self, client):
+        debit_bucket_response = client.post('/ledger/buckets?identifier=test-new-debit-bucket')
+        assert debit_bucket_response.status_code == 200
+        credit_bucket_response = client.post('/ledger/buckets?identifier=test-new-credit-bucket')
+        assert credit_bucket_response.status_code == 200
+
+        entries = [
+            {
+                "effective_date": "2021-01-21",
+                "debit": {
+                    "identifier": "test-new-debit-bucket",
+                    "value": 123.0
+                },
+                "credit": {
+                    "identifier": "test-new-credit-bucket",
+                    "value": -123.0
+                }
+            }
+        ]
+        entries_response = client.post('/ledger/entries?loan_id=1', data=json.dumps(entries), content_type='application/json')
+        assert '"2" ledger entries' in entries_response.get_json()['message']
+        assert entries_response.status_code == 200
+
+        response = client.get('/ledger/buckets/sum?loan_id=1&bucket_id=test-new-debit-bucket&bucket_id=test-new-credit-bucket')
+        print(response.get_json())
+        assert response.status_code == 200
+        buckets_sum = response.get_json()['entries']
+        assert buckets_sum['test-new-debit-bucket'] == 123.0
+        assert buckets_sum['test-new-credit-bucket'] == -123.0
+

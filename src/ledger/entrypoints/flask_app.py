@@ -56,7 +56,23 @@ def create_double_entries():
 
 @app.route('/ledger/buckets/sum', methods=['GET'])
 def get_buckets_sum():
-    pass
+    loan_id = request.args.get('loan_id', type=int)
+    if not loan_id:
+        return jsonify({'error': 'Please enter a valid integer loan id'}), 400
+
+    bucket_identifiers = request.args.getlist('bucket_id', type=str)
+    if not bucket_identifiers:
+        return jsonify({'error': 'Please enter at least one bucket identifier'}), 400
+
+    bucket_repo = repositories['bucket']
+    ledger_repo = repositories['ledger']
+    try:
+        buckets_sum = services.get_buckets_sum(loan_id, bucket_identifiers, bucket_repo.get(), ledger_repo.get())
+    except services.InvalidIdentifier as e:
+        return jsonify({'error': str(e)}), 400
+
+    return jsonify({'entries': buckets_sum}), 200
+
 
 
 @app.route('/ledger/entries', methods=['GET'])
