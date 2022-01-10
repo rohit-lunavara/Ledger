@@ -54,6 +54,10 @@ def create_double_entries():
 
     return jsonify({'message': f'"{len(ledger_entries)}" ledger entries created successfully'}), 200
 
+@app.route('/ledger/buckets/sum', methods=['GET'])
+def get_buckets_sum():
+    pass
+
 
 @app.route('/ledger/entries', methods=['GET'])
 def get_ledger_entries():

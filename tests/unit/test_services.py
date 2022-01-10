@@ -183,7 +183,7 @@ class TestBucketsSum:
         test_debit_bucket = AccountingBucket.create('test-debit-bucket')
         ledger = Ledger()
         with pytest.raises(InvalidIdentifier):
-            _ = get_buckets_sum(['test-credit-bucket'], [test_debit_bucket], ledger)
+            _ = get_buckets_sum(None, ['test-credit-bucket'], [test_debit_bucket], ledger)
 
     def test_if_identifier_found_then_sum_returned(self):
         test_debit_bucket = AccountingBucket.create('test-debit-bucket')
@@ -192,7 +192,7 @@ class TestBucketsSum:
             LedgerEntry(1, date.today(), date.today(), 'test-debit-bucket', 300.0)
         ])
 
-        buckets_sum = get_buckets_sum(['test-debit-bucket'], [test_debit_bucket], ledger)
+        buckets_sum = get_buckets_sum(None, ['test-debit-bucket'], [test_debit_bucket], ledger)
         assert buckets_sum['test-debit-bucket'] == 300.0
 
     def test_if_multiple_identifiers_found_then_all_sums_returned(self):
@@ -204,7 +204,7 @@ class TestBucketsSum:
             LedgerEntry(1, date.today(), date.today(), 'test-credit-bucket', -300.0), 
         ])
 
-        buckets_sum = get_buckets_sum(['test-debit-bucket', 'test-credit-bucket'], [test_debit_bucket, test_credit_bucket], ledger)
+        buckets_sum = get_buckets_sum(1, ['test-debit-bucket', 'test-credit-bucket'], [test_debit_bucket, test_credit_bucket], ledger)
         assert buckets_sum['test-debit-bucket'] == 300.0
         assert buckets_sum['test-credit-bucket'] == -300.0
 
@@ -216,5 +216,5 @@ class TestGetLedgerEntries:
         ledger = Ledger()
         ledger.add_new_entries([first_debit_entry, second_debit_entry])
 
-        ledger_entries = get_ledger_entries(1, ledger)
+        ledger_entries = list(get_ledger_entries(1, ledger))
         assert len(ledger_entries) == 2

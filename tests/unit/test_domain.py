@@ -37,7 +37,7 @@ class TestAccountingBucketAddValue:
 class TestGetEntriesLedger:
     def test_if_ledger_empty_no_entries_returned(self):
         ledger = Ledger()
-        ledger_entries = ledger.get_entries(1)
+        ledger_entries = list(ledger.get_entries_by_loan_id(1))
         assert not ledger_entries
 
     def test_if_loan_id_not_found_no_entries_returned(self):
@@ -45,7 +45,7 @@ class TestGetEntriesLedger:
         ledger.add_new_entries([
             LedgerEntry(1, date.today(), date.today(), 'test-debit-bucket', 100.0)
         ])
-        ledger_entries = ledger.get_entries(10000)
+        ledger_entries = list(ledger.get_entries_by_loan_id(10000))
         assert not ledger_entries
 
     def test_if_loan_id_found_all_entries_returned(self):
@@ -55,5 +55,5 @@ class TestGetEntriesLedger:
             LedgerEntry(1, date.today(), 'test-debit-bucket', 100.0, date.today())
             ])
 
-        ledger_entries = ledger.get_entries(1)
+        ledger_entries = list(ledger.get_entries_by_loan_id(1))
         assert len(ledger_entries) == 2
